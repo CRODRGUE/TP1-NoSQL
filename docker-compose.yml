@@ -1,0 +1,17 @@
+version: 'v12'
+services:
+  script:
+    build: ./app_mongodb
+    depends_on:
+      - mongodb
+    networks:
+      - lan_services
+    container_name: nodejs
+  mongodb:
+    build: ./mongodb
+    networks:
+      - lan_services
+    container_name: mongodb
+networks:
+  lan_services:
+    driver: bridge

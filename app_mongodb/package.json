@@ -12,6 +12,7 @@
     "@faker-js/faker": "^8.4.1"
   },
   "dependencies": {
+    "express": "^4.19.2",
     "mongodb": "^6.5.0"
   }
 }

@@ -1,11 +1,13 @@
 const { ObjectId, MongoClient } = require('mongodb');
 const { faker } = require('@faker-js/faker');
 
-
-const client = new MongoClient("mongodb://127.0.0.1:27017/");
+const client = new MongoClient("mongodb://mongodb:27017/");
 
 let IdUserDelete;
 
+// Permet de générer 100 documents, respectant la structure de données suivante 
+// {name: String, age: Number, email: String, createdAt: Date}
+// Avec l'utilisation de package faker.js pour générer les valeurs factices 
 function GenerateFakeData() {
     let ListUsers = [];
     for (let i = 0; i < 100; i++) {
@@ -20,25 +22,34 @@ function GenerateFakeData() {
     return ListUsers;
 }
 
+// Fonction qui permet d'ajouter les données indiquées en paramètre 
 async function InsertFakeUsers(listUsers) {
     try {
-        const database = client.db("test");
+        // Sélection de la base de données 
+        const database = client.db("script_crud");
+        // Sélection de la collection à manipuler
         const collectionUsers = database.collection("users");
-
+        // Insertion des données indique en paramètre
         const resultInsert = await collectionUsers.insertMany(listUsers);
+        // Affichage du résultat
         console.log(`${resultInsert.insertedCount} documents ont été insérés dans la collection users.`);
+        // Sélection d'un ID parmi ceux des données insérées
         IdUserDelete = resultInsert.insertedIds[(Math.floor(Math.random() * resultInsert.insertedCount))].toString();
     } catch (err) {
         console.log(`Oupsss erreur : ${err}`);
     }
 }
 
-
+// Fonction qui permet de récupérer les utilisateurs avec un âge supérieur à 30
 async function GetUsersAgedOver30() {
     try {
-        const database = client.db("test");
+        // Sélection de la base de données 
+        const database = client.db("script_crud");
+        // Sélection de la collection à manipuler
         const collectionUsers = database.collection("users");
+        // Préparation de la query, pour obtenir uniquement les utilisateurs avec l'âge > 30
         const query = { age: { $gt: 30 } };
+        // Lecture des utilisateurs correspondant à query (filtre)
         listUsersAgedOver30 = await collectionUsers.find(query);
 
         if ((await collectionUsers.countDocuments(query)) == 0) {
@@ -53,26 +64,35 @@ async function GetUsersAgedOver30() {
     }
 }
 
+// Fonction qui permet de modifier le champ age de chaque utilisateur avec une incrémentation de celui-ci de + 5
 async function UpdateAgeUsers() {
     try {
-        const database = client.db("test");
+        // Sélection de la base de données 
+        const database = client.db("script_crud");
+        // Sélection de la collection à manipuler
         const collectionUsers = database.collection("users");
+        // Préparation de l'objet update, qui permet d'incrémenter de +5 le champ age
         const updateData = { $inc: { age: +5 } };
+        // Lancement de la modification de tous les utilisateurs
         const resultUpdate = await collectionUsers.updateMany({}, updateData);
+        // Affichage du nombre d'utilisateurs 
         console.log(`${resultUpdate.modifiedCount} documents ont été modifiés.`);
-
     } catch (err) {
         console.log(`Oupsss erreur : ${err}`);
     }
 }
 
 
-// ok 
+// Fonction permettant de supprimer un document avec l'id indiquer en paramètre de la collection "users"
 async function DeleteUserById(id) {
     try {
-        const database = client.db("test");
+        // Sélection de la base de données 
+        const database = client.db("script_crud");
+        // Sélection de la collection à manipuler
         const collectionUsers = database.collection("users");
+        // Préparation de la query (filtre), pour sélectionner un document en fonction de son ID
         const query = { _id: new ObjectId(id) };
+        // Suppression d'un document en fonction de la query
         const resultDelete = await collectionUsers.deleteOne(query);
         console.log(resultDelete.deletedCount == 1 ? `L'utilisateur avec l'ID : ${id} a été supprimé.` : `Aucun utilisateur match avec la query, suppression impossible.`);
     } catch (err) {
