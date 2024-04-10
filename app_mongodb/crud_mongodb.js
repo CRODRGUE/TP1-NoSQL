@@ -1,7 +1,7 @@
 const { ObjectId, MongoClient } = require('mongodb');
 const { faker } = require('@faker-js/faker');
 
-const client = new MongoClient("mongodb://mongodb:27017/");
+const client = new MongoClient("mongodb://mongo1:27017,mongo2:27017,mongo3:27017/script_crud?replicaSet=rs0");
 
 let IdUserDelete;
 
@@ -108,7 +108,7 @@ async function MakeCRUD() {
     await GetUsersAgedOver30();
     console.log('========= UPDATE ==========');
     await UpdateAgeUsers();
-    console.log('========= INSERT ==========');
+    console.log('========= DELETE ==========');
     console.log(`L'utilisateur avec l'ID suivant : ${IdUserDelete} va être supprimé.`)
     await DeleteUserById(IdUserDelete);
 }

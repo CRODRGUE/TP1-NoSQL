@@ -40,37 +40,36 @@
 
 1. Effectuer les étapes de la section _"Comment démarrer le projet avec Docker ?"_
 
-2. Connecter vous au conteneur du service "mongodb" avec la commande suivante :
+2. Connecter vous au conteneur du service "mongodb" avec la commande suivante, pour obtenir un accès direct au CLI mongodb :
 ```bash
-    docker exec -it NomContenaire /bin/bash
+    docker exec -it mongo1 mongo
 ```
 _Note : il faut vérifier le nom du conteneur grâce à la commande : docker ps -a_
 
-3. éxecuter les commandes suivante pour créer les instances et les attribuées au replica set nommé "rs0" :
-```bash
-    mongod --config /etc/mongoDB/rs0-1.conf
-    mongod --config /etc/mongoDB/rs0-2.conf
-    mongod --config /etc/mongoDB/rs0-3.conf
-```
-
-4. Connecter vous à une instance "mongodb", par le biais de la commande ci-dessous :
-```bash
-    mongosh mongodb://127.0.0.1:27017/users
-```
-
-5. Initialiser le replica set grace à la commande suivante :
+3. Une fois connecté au conteneur via la CLI mongodb, il faut initialiser le replica set grâce aux commandes suivantes :
 ```mongoDB
-    rs.initiate({
-        _id: "rs0",
-        members: [
-            { _id: 0, host: "localhost:27017" },
-            { _id: 1, host: "localhost:27018" },
-            { _id: 2, host: "localhost:27019" }
+    var config = {
+        "_id": "rs0",
+        "version": 1,
+        "members": [
+            {
+                "_id": 0,
+                "host": "mongo1:27017"
+            },
+            {
+                "_id": 1,
+                "host": "mongo2:27017"
+            },
+            {
+                "_id": 2,
+                "host": "mongo3:27017"
+            }
         ]
-    });
+    };
+    rs.initiate(config, { force: true });
 ```
 
-6. Verifier le bon fonctionnement de celui-ci en utilisant la commande ci-dessous dans la CLI mongoDB
+4. Vérifier  le bon fonctionnement de celui-ci en utilisant la commande ci-dessous dans la CLI mongoDB
 ```mongoDB
     rs.status()
 ```
@@ -90,7 +89,7 @@ Les données factices générées, vont permettre d'insérer un ensemble de docu
 
 #### Comment générer les données factices ? 
 
-1. Effectuer les étapes de la section _"Comment démarrer le projet avec Docker ?"_
+1. Effectuer les étapes de la section _"Comment démarrer le projet avec Docker ?"_ 
 
 2. Connecter vous au conteneur du service "script" avec la commande suivante :
 ```bash
@@ -110,24 +109,22 @@ _Note : il faut vérifier le nom du conteneur grâce à la commande : docker ps 
 
 #### Comment insérer les données via la CLI MongoDB ?
 
-1. Connecter vous au conteneur du service "mongodb" avec la commande suivante :
+1. Connecter vous au conteneur du service "mongo1" avec la commande suivante pour entre dans la CLI mongodb :
 ```bash
-    docker exec -it mongodb /bin/bash
+    docker exec -it mongo1 mongo
 ```
 _Note : il faut vérifier le nom du conteneur grâce à la commande : docker ps -a_
 
-2. Connectez-vous à une instance MongoDB par le biais de commande ci-dessous :
-```bash
-    mongosh mongodb://127.0.0.1:27017/script_crud
+2. Sélectionner une base de données, pour cela utiliser la commande suivante :
+```mongo
+    use cli_crud
 ```
-_Note : il faut mettre le numéro de port correspondant par défaut 27017. Puis il faut également mettre le nom de la base de données._
 
-2. Une fois connectée à l'instance et avoir sélectionné la bonne base de données, il suffit d'exécuter la commande ci-dessous :
-
+3. Une fois avoir sélectionné la bonne base de données, il suffit d'exécuter la commande ci-dessous pour insérer les donner coller entre les [...] :
 ```mongoDB 
     db.users.insertMany([Coller le résultat ici])
 ```
-3. Vérification de l'insertion des données pour cela, il suffit de consulter l'ensemble des données présent dans la collection "users". Pour consulter les documents de la collection, il faut exécuter la commande suivante : 
+4. Vérification de l'insertion des données pour cela, il suffit de consulter l'ensemble des données présent dans la collection "users". Pour consulter les documents de la collection, il faut exécuter la commande suivante : 
 
 ``` mongoDB
     db.users.find()
@@ -135,12 +132,15 @@ _Note : il faut mettre le numéro de port correspondant par défaut 27017. Puis 
 
 ## Effectuer un CRUD via la CLI MongoDB
 
-Il faut premièrement se connecter à une instance MongoDB puis sélectionner une base de données. Pour effectuer cela, il suffit d'exécuter la commande ci-dessous : 
-
+Il faut premièrement se connecter à une instance MongoDB pour effectuer cela, il suffit d'exécuter la commande ci-dessous : 
 ```bash
-    mongosh mongodb://127.0.0.1:27017/cli_crud
+    docker exec -it mongo1 mongo
 ```
-_Note : il faut mettre le numéro de port correspondant par défaut 27017. Puis il faut également mettre le nom de la base de données._
+
+Puis il faut puis sélectionner une base de données. Utiliser la commande ci-dessous dans la CLI mongodb :
+```mongoDB 
+    use cli_crud
+```
 
 #### Create
 
@@ -212,8 +212,7 @@ _Ces commandes retournent le nombre d’éléments supprimé et si l'opération 
 
 #### Que fait le script ?
 
-Le script permet d'effectuer un CRUD sur une instance mongoDB, c'est-à-dire d'insérer, lire, modifier puis supprimer les données d'une collection. La collection appartenant à la base de données "script_crud" qui va être utiliser est nommes "users" avec une structure de données correspondant à celle ci-dessous : 
-
+Le script permet d'effectuer un CRUD sur une instance mongoDB, c'est-à-dire d'insérer, lire, modifier puis supprimer les données d'une collection. La collection appartenant à la base de données "script_crud" qui va être utilisé est nommées "users" avec une structure de données correspondant à celle ci-dessous : 
 ```js 
 {   
     name: String,   
@@ -225,7 +224,9 @@ Le script permet d'effectuer un CRUD sur une instance mongoDB, c'est-à-dire d'i
 
 #### Comment utiliser le script ?
 
-1. Effectuer les étapes de la section _"Comment démarrer le projet avec Docker ?"_
+Le script va permettre d'effectuer un CRUD, sur une réplicas set mongodb. Il va premièrement insérer 100 utilisateurs générés aléatoirement grâce à faker.js, puis il va récupérer les utilisateurs ajoutés avant de modifier l'age de tous les utilisateurs en incrémentant celui-ci de 5 puis pour terminer, il va supprimer un utilisateur aléatoirement !
+
+1. Effectuer les étapes de la section _"Comment démarrer le projet avec Docker ?"_ & _"Comment démarrer le Replica Set ?"_
 
 2. Connecter vous au conteneur du service "script" avec la commande suivante :
 ```bash
@@ -244,7 +245,7 @@ _Note : il faut vérifier le nom du conteneur grâce à la commande : docker ps 
     node ./crud_mongodb.js
 ```
 
-5. Vérifier qu'il n'y a pas de messages d'erreur dans le terminal, puis enfin connectez vous à l'instance mongoDB (en vous connectant au conteneur "mongodb") pour vérifier que les données ont bien étaient insérées. Voir section précédente "Effectuer un CRUD via la CLI MongoDB" pour cela.
+5. Vérifier qu'il n'y a pas de messages d'erreur dans le terminal, puis enfin connectez vous à l'instance mongoDB (en vous connectant au conteneur "mongodb") pour vérifier que les données ont bien étaient insérées. Voir section précédente "Effectuer un CRUD via la CLI MongoDB" pour cela. Penser à sélectionner la base de données suivante "script_crud"
 
 ## Les différences observées entre les opérations CRUD en CLI et via le script.
 
